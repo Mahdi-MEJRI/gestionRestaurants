@@ -14,7 +14,7 @@
 ## Installation
 
 
-Télécharger gestionRestaurants project.
+Download gestionRestaurants project.
 
 ```sh
 $ git clone https://github.com/Mahdi-MEJRI/gestionRestaurants.git
