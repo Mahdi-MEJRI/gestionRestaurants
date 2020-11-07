@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <script src="lib/vue.min.js"></script>
+    <script src="lib/lodash.min.js"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue-router/3.4.8/vue-router.min.js"></script>
+
+   
+    <script src="js/script.js"></script>
+
+    <link rel="stylesheet" href="css/styles.css">
+
+    <title>Gestionnaire restaurants VueJS</title>
+</head>
+
+<body>
+   
+ 
+<div id="app" data-app style="font-family: Comic Sans MS, cursive, sans-serif;"> 
+  
+    <v-toolbar dark>
+        
+        <v-textarea
+        append-icon="mdi-magnify"
+        class="mx-2"
+        label="Chercher par nom : "
+        rows="1"
+        @input="chercherRestaurants()" 
+        type="text" 
+        v-model="nomRestauRecherche"
+      ></v-textarea>
+      <v-spacer></v-spacer>
+      <v-spacer><h1>Nombre de restaurants : {{nbRestaurantsTotal}}</h1></v-spacer>
+      
+      <template>
+        <v-row justify="center">
+          <v-dialog
+            v-model="dialog"
+            persistent
+            max-width="600px"
+          >
+                <template v-slot:activator="{ on, attrs }">
+                    <v-btn
+                      color="primary"
+                      dark
+                      v-bind="attrs"
+                      v-on="on"
+                    >Ajouter
+                    <v-icon white>
+                      mdi-plus
+                    </v-icon>
+                    </v-btn>
+                  </template>
+                  <v-card>
+                    <v-card-title>
+                      <span class="headline">Ajouter un restaurant :</span>
+                    </v-card-title>
+                    <v-form @submit="ajouterRestaurant">
+                      <v-card-text>
+                        <label style="padding: 15px">
+                          Nom : <input name="nom" type="text" required v-model="nom">
+                      </label>
+                      <br/>
+                      <br/>
+                      <label>
+                          Cuisine : <input name="cuisine" type="text" required v-model="cuisine">
+                      </label>
+                      <br/>
+                      <br/>
+                      <label style="padding: 15px">
+                        Ville : <input name="borough" type="text" required v-model="borough">
+                    </label>
+                      </v-card-text>
+                      <v-card-actions>
+                      <v-spacer></v-spacer>
+                      <v-btn
+                        color="blue darken-1"
+                        text
+                        @click="dialog = false"
+                      >
+                        Fermer
+                      </v-btn>
+                      <v-btn
+                        color="blue darken-1"
+                        text
+                        type="submit"   
+                      >
+                        Ajouter
+                      </v-btn>
+                      </v-card-actions>
+                  </v-form>
+                  </v-card>
+          </v-dialog>
+        </v-row>
+      </template>
+
+      </v-toolbar>
+
+     
+      <router-view></router-view>
+
+
+      <div class="my-item" style="padding: 100px ; padding-top:50px;">
+   
+    <v-simple-table height="500px">
+      
+        <template v-slot:default>
+          <thead>
+            <tr>
+              <th class="text-left">
+                Nom
+              </th>
+              <th class="text-left">
+                Cuisine
+              </th>
+              <th class="text-left">
+                Ville
+              </th>
+              <th class="text-left">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Si le nombre de restaurants trouvés = 0 -->
+            <div v-if="!nbRestaurantsTotal">   
+              <br>                                         
+              <span style="padding-left: 50%">
+                 Aucun restaurant ne correspond à votre recherche </span>
+            </div>
+            <br/>
+            <tr 
+            v-for="r,index in restaurants" 
+            :class="{bordureRouge:(index === 2)}"
+        >
+            <td>{{r.name}}</td>
+            <td> {{r.cuisine}}</td>
+            <td> {{r.borough}}</td>
+            <td><v-icon
+              @click="supprimerRestaurant(r)">
+              mdi-delete
+            </v-icon>
+            <!--Le router link nous dérige vers /RestaurantDetail/id, refrechi la page et nous amméne en haut de la page -->      
+            <router-link :to ="'/RestaurantDetail/' + r._id" onclick="window.location.reload(); window.scrollTo(0,0);" ><v-icon> 
+              mdi-magnify
+            </v-icon>
+          </router-link>
+          </td>
+            
+        </tr>
+          </tbody>
+         
+        </template>
+      </v-simple-table>
+      <br/>
+      <h3 style="display: flex; text-align:center; width:100%; justify-content: center;">
+        Nombre de restaurants par page :   
+        <input 
+            @input="getRestaurantsFromServer()"
+            type="range" min=2 max=1000 v-model="pagesize"
+            style=" cursor: pointer"
+        >{{pagesize}}</h3>
+        <br/>
+<div style="display: flex; text-align:center; width:100%; justify-content: center;" >
+      <v-btn
+        fab
+        dark
+        color="blue darken-3"
+        class="mr-1"
+        @click="pagePrecedente()"
+      >
+        <v-icon>mdi-chevron-left</v-icon>
+      </v-btn>
+      <v-spacer>
+      <span
+      class="mr-4
+      grey--text"
+      >
+      Page {{  page  }}  sur  {{  nbPagesTotal  }}
+      <span>
+  </v-spacer>
+      <v-btn
+        fab
+        dark
+        color="blue darken-3"
+        class="ml-1"
+        @click="pageSuivante"
+      >
+        <v-icon>mdi-chevron-right</v-icon>
+      </v-btn>
+    </div>
+</div>
+</div>
+</body>
+
+</html>
