@@ -47,6 +47,7 @@ npm install
 
 
 ```
+cd serveur
 npm run dev-server
 ```
 
